@@ -15,6 +15,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #fdf8f4;
 }
 
 code {
@@ -22,29 +23,29 @@ code {
     monospace;
 }
 
-/* src/index.css or a dedicated css file */
-.landing-page-bg {
-  background: #f7f3f1; /* Fallback color */
-  background-image: linear-gradient(to right, #fcecd5, #f8d5ba, #ff9839); /* Example gradient, adjust colors to match image */
-}
-
-/* Dark scrollbar for chat panel */
+/* Scrollbar - warm light theme */
 .chat-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
 .chat-scrollbar::-webkit-scrollbar-track {
-  background: #202124;
+  background: transparent;
 }
 .chat-scrollbar::-webkit-scrollbar-thumb {
-  background: #5f6368;
+  background: #d4c5b5;
   border-radius: 3px;
 }
 .chat-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #80868b;
+  background: #b8a899;
 }
 
 /* Firefox scrollbar */
 .chat-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: #5f6368 #202124;
+  scrollbar-color: #d4c5b5 transparent;
+}
+
+/* Landing page bg kept as-is */
+.landing-page-bg {
+  background: #f7f3f1;
+  background-image: linear-gradient(to right, #fcecd5, #f8d5ba, #ff9839);
 }

@@ -401,7 +401,7 @@ export default function VideoMeetComponent() {
     };
 
     return (
-        <div className="h-screen w-screen bg-meet-bg text-meet-text flex flex-col overflow-hidden">
+        <div className="h-screen w-screen bg-ll-bg text-ll-text flex flex-col overflow-hidden">
 
             {askForUsername === true ? (
                 <Lobby
@@ -420,7 +420,7 @@ export default function VideoMeetComponent() {
                             <div className={`w-full h-full grid ${getGridCols()} gap-2 md:gap-3 auto-rows-fr`}>
 
                                 {/* Local Video Tile */}
-                                <div className="relative bg-meet-elevated rounded-xl overflow-hidden min-h-0">
+                                <div className="relative bg-gray-800 rounded-2xl overflow-hidden min-h-0 shadow-lg border border-ll-border">
                                     <video
                                         className="w-full h-full object-cover"
                                         ref={localVideoref}
@@ -430,24 +430,24 @@ export default function VideoMeetComponent() {
 
                                     {/* Avatar fallback when video is off */}
                                     {!video && (
-                                        <div className="absolute inset-0 flex items-center justify-center bg-meet-elevated">
-                                            <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full bg-[#7b6fad] flex items-center justify-center text-white text-2xl sm:text-3xl md:text-4xl font-medium">
+                                        <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
+                                            <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full bg-ll-accent flex items-center justify-center text-white text-2xl sm:text-3xl md:text-4xl font-bold">
                                                 {username ? username.charAt(0).toUpperCase() : 'Y'}
                                             </div>
                                         </div>
                                     )}
 
                                     {/* Name badge */}
-                                    <div className="absolute bottom-2 left-2 md:bottom-3 md:left-3 text-white text-xs md:text-sm font-medium drop-shadow-lg">
+                                    <div className="absolute bottom-2 left-2 md:bottom-3 md:left-3 bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-md text-white text-xs md:text-sm font-medium">
                                         {username || 'You'}
                                     </div>
                                 </div>
 
                                 {/* Remote Video Tiles */}
                                 {videos.map((vid, index) => (
-                                    <div key={vid.socketId} className="relative bg-meet-elevated rounded-xl overflow-hidden min-h-0">
+                                    <div key={vid.socketId} className="relative bg-gray-800 rounded-2xl overflow-hidden min-h-0 shadow-lg border border-ll-border">
                                         <Video stream={vid.stream} />
-                                        <div className="absolute bottom-2 left-2 md:bottom-3 md:left-3 text-white text-xs md:text-sm font-medium drop-shadow-lg">
+                                        <div className="absolute bottom-2 left-2 md:bottom-3 md:left-3 bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-md text-white text-xs md:text-sm font-medium">
                                             User {index + 1}
                                         </div>
                                     </div>
@@ -464,17 +464,17 @@ export default function VideoMeetComponent() {
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         exit={{ opacity: 0 }}
-                                        className="md:hidden fixed inset-0 bg-black/50 z-40"
+                                        className="md:hidden fixed inset-0 bg-black/30 z-40"
                                         onClick={handleToggleChat}
                                     />
 
-                                    {/* Chat panel */}
+                                    {/* Desktop chat panel */}
                                     <motion.div
                                         initial={{ width: 0, opacity: 0 }}
                                         animate={{ width: 'auto', opacity: 1 }}
                                         exit={{ width: 0, opacity: 0 }}
                                         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                                        className="hidden md:flex w-80 lg:w-96 flex-shrink-0 border-l border-meet-elevated"
+                                        className="hidden md:flex w-80 lg:w-96 flex-shrink-0 border-l border-ll-border"
                                     >
                                         <Chat
                                             messages={messages}
@@ -492,7 +492,7 @@ export default function VideoMeetComponent() {
                                         animate={{ y: 0 }}
                                         exit={{ y: '100%' }}
                                         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                                        className="md:hidden fixed inset-0 z-50 bg-meet-bg"
+                                        className="md:hidden fixed inset-0 z-50 bg-white"
                                     >
                                         <Chat
                                             messages={messages}
@@ -508,134 +508,136 @@ export default function VideoMeetComponent() {
                         </AnimatePresence>
                     </div>
 
-                    {/* Bottom controls area */}
-                    <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-3 md:px-6 py-3 md:py-4 z-30">
+                    {/* Bottom controls bar */}
+                    <div className="absolute bottom-0 left-0 right-0 z-30">
+                        <div className="bg-white/90 backdrop-blur-sm border-t border-ll-border flex items-center justify-between px-3 md:px-6 py-3 md:py-4">
 
-                        {/* Left: time + meeting code */}
-                        <div className="hidden md:flex items-center gap-3 text-meet-text-secondary text-sm">
-                            <span>{currentTime}</span>
-                            <span className="text-meet-border">|</span>
-                            <span>{meetingCode}</span>
-                        </div>
+                            {/* Left: time + meeting code */}
+                            <div className="hidden md:flex items-center gap-3 text-ll-text-secondary text-sm">
+                                <span className="font-medium">{currentTime}</span>
+                                <span className="text-ll-border-strong">|</span>
+                                <span className="font-mono tracking-wide text-ll-text">{meetingCode}</span>
+                            </div>
 
-                        {/* Center: control buttons */}
-                        <div className="flex items-center gap-1 sm:gap-2 mx-auto md:mx-0">
+                            {/* Center: control buttons */}
+                            <div className="flex items-center gap-1.5 sm:gap-2 mx-auto md:mx-0">
 
-                            {/* Microphone */}
-                            <button
-                                onClick={handleAudio}
-                                className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-200 ${
-                                    audio
-                                        ? 'bg-meet-elevated hover:bg-meet-border text-white'
-                                        : 'bg-meet-danger hover:bg-meet-danger-hover text-white'
-                                }`}
-                                title={audio ? 'Mute microphone' : 'Unmute microphone'}
-                            >
-                                {audio
-                                    ? <MicrophoneIcon className="h-5 w-5 md:h-6 md:w-6" />
-                                    : <NoSymbolIcon className="h-5 w-5 md:h-6 md:w-6" />
-                                }
-                            </button>
-
-                            {/* Camera */}
-                            <button
-                                onClick={handleVideo}
-                                className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-200 ${
-                                    video
-                                        ? 'bg-meet-elevated hover:bg-meet-border text-white'
-                                        : 'bg-meet-danger hover:bg-meet-danger-hover text-white'
-                                }`}
-                                title={video ? 'Turn off camera' : 'Turn on camera'}
-                            >
-                                {video
-                                    ? <VideoCameraIcon className="h-5 w-5 md:h-6 md:w-6" />
-                                    : <VideoCameraSlashIcon className="h-5 w-5 md:h-6 md:w-6" />
-                                }
-                            </button>
-
-                            {/* Screen share */}
-                            {screenAvailable && (
+                                {/* Microphone */}
                                 <button
-                                    onClick={handleScreen}
-                                    className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-200 ${
-                                        screen
-                                            ? 'bg-meet-accent text-meet-bg'
-                                            : 'bg-meet-elevated hover:bg-meet-border text-white'
+                                    onClick={handleAudio}
+                                    className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-200 shadow-sm ${
+                                        audio
+                                            ? 'bg-ll-elevated hover:bg-ll-border text-ll-text'
+                                            : 'bg-ll-danger hover:bg-ll-danger-hover text-white'
                                     }`}
-                                    title={screen ? 'Stop presenting' : 'Present now'}
+                                    title={audio ? 'Mute microphone' : 'Unmute microphone'}
                                 >
-                                    {screen
-                                        ? <StopCircleIcon className="h-5 w-5 md:h-6 md:w-6" />
-                                        : <ComputerDesktopIcon className="h-5 w-5 md:h-6 md:w-6" />
+                                    {audio
+                                        ? <MicrophoneIcon className="h-5 w-5 md:h-6 md:w-6" />
+                                        : <NoSymbolIcon className="h-5 w-5 md:h-6 md:w-6" />
                                     }
                                 </button>
-                            )}
 
-                            {/* End call */}
-                            <button
-                                onClick={handleEndCall}
-                                className="h-10 md:h-12 px-4 md:px-5 rounded-full bg-meet-danger hover:bg-meet-danger-hover text-white flex items-center justify-center transition-all duration-200 ml-2"
-                                title="Leave call"
-                            >
-                                <PhoneXMarkIcon className="h-5 w-5 md:h-6 md:w-6" />
-                            </button>
-                        </div>
+                                {/* Camera */}
+                                <button
+                                    onClick={handleVideo}
+                                    className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-200 shadow-sm ${
+                                        video
+                                            ? 'bg-ll-elevated hover:bg-ll-border text-ll-text'
+                                            : 'bg-ll-danger hover:bg-ll-danger-hover text-white'
+                                    }`}
+                                    title={video ? 'Turn off camera' : 'Turn on camera'}
+                                >
+                                    {video
+                                        ? <VideoCameraIcon className="h-5 w-5 md:h-6 md:w-6" />
+                                        : <VideoCameraSlashIcon className="h-5 w-5 md:h-6 md:w-6" />
+                                    }
+                                </button>
 
-                        {/* Right: info, chat, participants */}
-                        <div className="hidden md:flex items-center gap-1">
-                            <button
-                                className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center hover:bg-meet-elevated text-meet-text-secondary transition-colors"
-                                title="Meeting details"
-                            >
-                                <InformationCircleIcon className="h-5 w-5 md:h-6 md:w-6" />
-                            </button>
+                                {/* Screen share */}
+                                {screenAvailable && (
+                                    <button
+                                        onClick={handleScreen}
+                                        className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-200 shadow-sm ${
+                                            screen
+                                                ? 'bg-ll-accent text-white'
+                                                : 'bg-ll-elevated hover:bg-ll-border text-ll-text'
+                                        }`}
+                                        title={screen ? 'Stop presenting' : 'Present now'}
+                                    >
+                                        {screen
+                                            ? <StopCircleIcon className="h-5 w-5 md:h-6 md:w-6" />
+                                            : <ComputerDesktopIcon className="h-5 w-5 md:h-6 md:w-6" />
+                                        }
+                                    </button>
+                                )}
 
-                            <button
-                                className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center hover:bg-meet-elevated text-meet-text-secondary transition-colors"
-                                title="People"
-                            >
-                                <UserGroupIcon className="h-5 w-5 md:h-6 md:w-6" />
-                            </button>
+                                {/* End call */}
+                                <button
+                                    onClick={handleEndCall}
+                                    className="h-10 md:h-12 px-5 md:px-6 rounded-full bg-ll-danger hover:bg-ll-danger-hover text-white flex items-center justify-center transition-all duration-200 ml-2 shadow-md hover:shadow-lg"
+                                    title="Leave call"
+                                >
+                                    <PhoneXMarkIcon className="h-5 w-5 md:h-6 md:w-6" />
+                                </button>
+                            </div>
 
-                            {/* Chat toggle */}
-                            <div className="relative">
+                            {/* Right: info, chat, participants */}
+                            <div className="hidden md:flex items-center gap-1">
+                                <button
+                                    className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center hover:bg-ll-elevated text-ll-text-secondary transition-colors"
+                                    title="Meeting details"
+                                >
+                                    <InformationCircleIcon className="h-5 w-5 md:h-6 md:w-6" />
+                                </button>
+
+                                <button
+                                    className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center hover:bg-ll-elevated text-ll-text-secondary transition-colors"
+                                    title="People"
+                                >
+                                    <UserGroupIcon className="h-5 w-5 md:h-6 md:w-6" />
+                                </button>
+
+                                {/* Chat toggle */}
+                                <div className="relative">
+                                    <button
+                                        onClick={handleToggleChat}
+                                        className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-colors ${
+                                            showChat
+                                                ? 'bg-ll-accent text-white'
+                                                : 'hover:bg-ll-elevated text-ll-text-secondary'
+                                        }`}
+                                        title="Chat with everyone"
+                                    >
+                                        <ChatBubbleLeftRightIcon className="h-5 w-5 md:h-6 md:w-6" />
+                                    </button>
+                                    {newMessages > 0 && !showChat && (
+                                        <span className="absolute -top-1 -right-1 bg-ll-accent text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                                            {newMessages}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Mobile-only chat toggle */}
+                            <div className="md:hidden relative">
                                 <button
                                     onClick={handleToggleChat}
-                                    className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-colors ${
+                                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors shadow-sm ${
                                         showChat
-                                            ? 'bg-meet-accent text-meet-bg'
-                                            : 'hover:bg-meet-elevated text-meet-text-secondary'
+                                            ? 'bg-ll-accent text-white'
+                                            : 'bg-ll-elevated text-ll-text'
                                     }`}
-                                    title="Chat with everyone"
+                                    title="Chat"
                                 >
-                                    <ChatBubbleLeftRightIcon className="h-5 w-5 md:h-6 md:w-6" />
+                                    <ChatBubbleLeftRightIcon className="h-5 w-5" />
                                 </button>
                                 {newMessages > 0 && !showChat && (
-                                    <span className="absolute -top-1 -right-1 bg-meet-accent text-meet-bg text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                                    <span className="absolute -top-1 -right-1 bg-ll-accent text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
                                         {newMessages}
                                     </span>
                                 )}
                             </div>
-                        </div>
-
-                        {/* Mobile-only chat toggle (shown at end of center controls) */}
-                        <div className="md:hidden relative">
-                            <button
-                                onClick={handleToggleChat}
-                                className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
-                                    showChat
-                                        ? 'bg-meet-accent text-meet-bg'
-                                        : 'bg-meet-elevated text-white'
-                                }`}
-                                title="Chat"
-                            >
-                                <ChatBubbleLeftRightIcon className="h-5 w-5" />
-                            </button>
-                            {newMessages > 0 && !showChat && (
-                                <span className="absolute -top-1 -right-1 bg-meet-accent text-meet-bg text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
-                                    {newMessages}
-                                </span>
-                            )}
                         </div>
                     </div>
                 </>
