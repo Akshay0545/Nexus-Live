@@ -1,16 +1,18 @@
 import React, { useEffect, useRef, useState } from 'react'
 import io from "socket.io-client";
-import { motion } from 'framer-motion'; // Import framer-motion
+import { AnimatePresence, motion } from 'framer-motion';
 import {
     VideoCameraIcon,
     VideoCameraSlashIcon,
     PhoneXMarkIcon,
     MicrophoneIcon,
-    NoSymbolIcon,           // <-- use this for “mic off”
+    NoSymbolIcon,
     ComputerDesktopIcon,
     ChatBubbleLeftRightIcon,
-    StopCircleIcon
-} from '@heroicons/react/24/solid'; // Import Heroicons
+    StopCircleIcon,
+    InformationCircleIcon,
+    UserGroupIcon
+} from '@heroicons/react/24/solid';
 import server from '../environment';
 import Chat from './Chat';
 import Video from './Video';
@@ -34,39 +36,34 @@ export default function VideoMeetComponent() {
     let localVideoref = useRef();
 
     let [videoAvailable, setVideoAvailable] = useState(true);
-
     let [audioAvailable, setAudioAvailable] = useState(true);
-
     let [video, setVideo] = useState([]);
-
     let [audio, setAudio] = useState();
-
     let [screen, setScreen] = useState();
-
-    let [showModal, setModal] = useState(true);
-
+    let [showChat, setShowChat] = useState(false);
     let [screenAvailable, setScreenAvailable] = useState();
-
-    let [messages, setMessages] = useState([])
-
+    let [messages, setMessages] = useState([]);
     let [message, setMessage] = useState("");
-
-    let [newMessages, setNewMessages] = useState(3);
-
+    let [newMessages, setNewMessages] = useState(0);
     let [askForUsername, setAskForUsername] = useState(true);
-
     let [username, setUsername] = useState("");
+    const videoRef = useRef([]);
+    let [videos, setVideos] = useState([]);
+    const [currentTime, setCurrentTime] = useState('');
 
-    const videoRef = useRef([])
-
-    let [videos, setVideos] = useState([])
-
-
+    // Update clock every minute
+    useEffect(() => {
+        const updateTime = () => {
+            const now = new Date();
+            setCurrentTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+        };
+        updateTime();
+        const interval = setInterval(updateTime, 60000);
+        return () => clearInterval(interval);
+    }, []);
 
     useEffect(() => {
-        console.log("HELLO")
         getPermissions();
-
     }, []);
 
     let getDislayMedia = () => {
@@ -85,19 +82,15 @@ export default function VideoMeetComponent() {
             const videoPermission = await navigator.mediaDevices.getUserMedia({ video: true });
             if (videoPermission) {
                 setVideoAvailable(true);
-                console.log('Video permission granted');
             } else {
                 setVideoAvailable(false);
-                console.log('Video permission denied');
             }
 
             const audioPermission = await navigator.mediaDevices.getUserMedia({ audio: true });
             if (audioPermission) {
                 setAudioAvailable(true);
-                console.log('Audio permission granted');
             } else {
                 setAudioAvailable(false);
-                console.log('Audio permission denied');
             }
 
             if (navigator.mediaDevices.getDisplayMedia) {
@@ -123,21 +116,14 @@ export default function VideoMeetComponent() {
     useEffect(() => {
         if (video !== undefined && audio !== undefined) {
             getUserMedia();
-            console.log("SET STATE HAS ", video, audio);
-
         }
-
-
     }, [video, audio])
+
     let getMedia = () => {
         setVideo(videoAvailable);
         setAudio(audioAvailable);
         connectToSocketServer();
-
     }
-
-
-
 
     let getUserMediaSuccess = (stream) => {
         try {
@@ -149,11 +135,8 @@ export default function VideoMeetComponent() {
 
         for (let id in connections) {
             if (id === socketIdRef.current) continue
-
             connections[id].addStream(window.localStream)
-
             connections[id].createOffer().then((description) => {
-                console.log(description)
                 connections[id].setLocalDescription(description)
                     .then(() => {
                         socketRef.current.emit('signal', id, JSON.stringify({ 'sdp': connections[id].localDescription }))
@@ -165,7 +148,6 @@ export default function VideoMeetComponent() {
         stream.getTracks().forEach(track => track.onended = () => {
             setVideo(false);
             setAudio(false);
-
             try {
                 let tracks = localVideoref.current.srcObject.getTracks()
                 tracks.forEach(track => track.stop())
@@ -177,7 +159,6 @@ export default function VideoMeetComponent() {
 
             for (let id in connections) {
                 connections[id].addStream(window.localStream)
-
                 connections[id].createOffer().then((description) => {
                     connections[id].setLocalDescription(description)
                         .then(() => {
@@ -203,12 +184,7 @@ export default function VideoMeetComponent() {
         }
     }
 
-
-
-
-
     let getDislayMediaSuccess = (stream) => {
-        console.log("HERE")
         try {
             window.localStream.getTracks().forEach(track => track.stop())
         } catch (e) { console.log(e) }
@@ -218,9 +194,7 @@ export default function VideoMeetComponent() {
 
         for (let id in connections) {
             if (id === socketIdRef.current) continue
-
             connections[id].addStream(window.localStream)
-
             connections[id].createOffer().then((description) => {
                 connections[id].setLocalDescription(description)
                     .then(() => {
@@ -232,7 +206,6 @@ export default function VideoMeetComponent() {
 
         stream.getTracks().forEach(track => track.onended = () => {
             setScreen(false)
-
             try {
                 let tracks = localVideoref.current.srcObject.getTracks()
                 tracks.forEach(track => track.stop())
@@ -241,9 +214,7 @@ export default function VideoMeetComponent() {
             let blackSilence = (...args) => new MediaStream([black(...args), silence()])
             window.localStream = blackSilence()
             localVideoref.current.srcObject = window.localStream
-
             getUserMedia()
-
         })
     }
 
@@ -269,9 +240,6 @@ export default function VideoMeetComponent() {
         }
     }
 
-
-
-
     let connectToSocketServer = () => {
         socketRef.current = io.connect(server_url, { secure: false })
 
@@ -289,26 +257,17 @@ export default function VideoMeetComponent() {
 
             socketRef.current.on('user-joined', (id, clients) => {
                 clients.forEach((socketListId) => {
-
                     connections[socketListId] = new RTCPeerConnection(peerConfigConnections)
-                    console.log("ADDING CONNECTION FOR ", socketListId);
                     connections[socketListId].onicecandidate = function (event) {
                         if (event.candidate != null) {
                             socketRef.current.emit('signal', socketListId, JSON.stringify({ 'ice': event.candidate }))
                         }
                     }
 
-
                     connections[socketListId].onaddstream = (event) => {
-                        console.log("BEFORE:", videoRef.current);
-                        console.log("FINDING ID: ", socketListId);
-
                         let videoExists = videoRef.current.find(video => video.socketId === socketListId);
 
                         if (videoExists) {
-                            console.log("FOUND EXISTING");
-
-
                             setVideos(videos => {
                                 const updatedVideos = videos.map(video =>
                                     video.socketId === socketListId ? { ...video, stream: event.stream } : video
@@ -317,8 +276,6 @@ export default function VideoMeetComponent() {
                                 return updatedVideos;
                             });
                         } else {
-                            console.log("NOT FOUND");
-                            console.log("CREATING NEW");
                             let newVideo = {
                                 socketId: socketListId,
                                 stream: event.stream,
@@ -334,8 +291,6 @@ export default function VideoMeetComponent() {
                         }
                     };
 
-
-
                     if (window.localStream !== undefined && window.localStream !== null) {
                         connections[socketListId].addStream(window.localStream)
                     } else {
@@ -348,7 +303,6 @@ export default function VideoMeetComponent() {
                 if (id === socketIdRef.current) {
                     for (let id2 in connections) {
                         if (id2 === socketIdRef.current) continue
-
                         try {
                             connections[id2].addStream(window.localStream)
                         } catch (e) { }
@@ -374,6 +328,7 @@ export default function VideoMeetComponent() {
         ctx.resume()
         return Object.assign(dst.stream.getAudioTracks()[0], { enabled: false })
     }
+
     let black = ({ width = 640, height = 480 } = {}) => {
         let canvas = Object.assign(document.createElement("canvas"), { width, height })
         canvas.getContext('2d').fillRect(0, 0, width, height)
@@ -383,11 +338,10 @@ export default function VideoMeetComponent() {
 
     let handleVideo = () => {
         setVideo(!video);
-
     }
+
     let handleAudio = () => {
         setAudio(!audio)
-
     }
 
     useEffect(() => {
@@ -395,6 +349,7 @@ export default function VideoMeetComponent() {
             getDislayMedia();
         }
     }, [screen])
+
     let handleScreen = () => {
         setScreen(!screen);
     }
@@ -418,7 +373,6 @@ export default function VideoMeetComponent() {
     };
 
     let sendMessage = () => {
-        console.log(socketRef.current);
         socketRef.current.emit('chat-message', message, username)
         setMessage("");
     }
@@ -428,9 +382,26 @@ export default function VideoMeetComponent() {
         getMedia();
     }
 
+    const handleToggleChat = () => {
+        setShowChat(!showChat);
+        if (!showChat) {
+            setNewMessages(0);
+        }
+    }
+
+    // Get meeting code from URL
+    const meetingCode = window.location.pathname.replace('/', '');
+
+    // Dynamic grid columns based on participant count
+    const totalParticipants = 1 + videos.length;
+    const getGridCols = () => {
+        if (totalParticipants === 1) return 'grid-cols-1';
+        if (totalParticipants === 2) return 'grid-cols-1 md:grid-cols-2';
+        return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3';
+    };
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white flex flex-col"> {/* Main container */}
+        <div className="h-screen w-screen bg-meet-bg text-meet-text flex flex-col overflow-hidden">
 
             {askForUsername === true ? (
                 <Lobby
@@ -440,98 +411,234 @@ export default function VideoMeetComponent() {
                     connect={connect}
                 />
             ) : (
-                <div className="flex flex-1 relative"> {/* Main content area: video grid + chat */}
-                    {/* Video Grid will go here */}
-                    <div className="flex-1 p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {/* Local Video */}
-                        <div className="relative w-full h-full bg-gray-800 rounded-lg overflow-hidden">
-                            <video
-                                className="w-full h-full object-cover"
-                                ref={localVideoref}
-                                autoPlay
-                                muted
-                            ></video>
-                            <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 px-2 py-1 rounded-md text-xs">
-                                You
-                            </div>
-                        </div>
+                <>
+                    {/* Main content: video grid + chat sidebar */}
+                    <div className="flex flex-1 min-h-0">
 
-                        {/* Remote Videos */}
-                        {videos.map((vid, index) => (
-                            <div key={vid.socketId} className="relative w-full h-full bg-gray-800 rounded-lg overflow-hidden">
-                                <Video
-                                    stream={vid.stream} // Pass the stream directly
-                                />
-                                <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 px-2 py-1 rounded-md text-xs">
-                                    User {index + 1} {/* Placeholder for username */}
+                        {/* Video grid area */}
+                        <div className="flex-1 min-w-0 p-2 md:p-3 pb-20 md:pb-24 flex items-center justify-center">
+                            <div className={`w-full h-full grid ${getGridCols()} gap-2 md:gap-3 auto-rows-fr`}>
+
+                                {/* Local Video Tile */}
+                                <div className="relative bg-meet-elevated rounded-xl overflow-hidden min-h-0">
+                                    <video
+                                        className="w-full h-full object-cover"
+                                        ref={localVideoref}
+                                        autoPlay
+                                        muted
+                                    ></video>
+
+                                    {/* Avatar fallback when video is off */}
+                                    {!video && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-meet-elevated">
+                                            <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full bg-[#7b6fad] flex items-center justify-center text-white text-2xl sm:text-3xl md:text-4xl font-medium">
+                                                {username ? username.charAt(0).toUpperCase() : 'Y'}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Name badge */}
+                                    <div className="absolute bottom-2 left-2 md:bottom-3 md:left-3 text-white text-xs md:text-sm font-medium drop-shadow-lg">
+                                        {username || 'You'}
+                                    </div>
                                 </div>
+
+                                {/* Remote Video Tiles */}
+                                {videos.map((vid, index) => (
+                                    <div key={vid.socketId} className="relative bg-meet-elevated rounded-xl overflow-hidden min-h-0">
+                                        <Video stream={vid.stream} />
+                                        <div className="absolute bottom-2 left-2 md:bottom-3 md:left-3 text-white text-xs md:text-sm font-medium drop-shadow-lg">
+                                            User {index + 1}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                        ))}
+                        </div>
+
+                        {/* Chat sidebar - desktop: side panel, mobile: full-screen overlay */}
+                        <AnimatePresence>
+                            {showChat && (
+                                <>
+                                    {/* Mobile overlay backdrop */}
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="md:hidden fixed inset-0 bg-black/50 z-40"
+                                        onClick={handleToggleChat}
+                                    />
+
+                                    {/* Chat panel */}
+                                    <motion.div
+                                        initial={{ width: 0, opacity: 0 }}
+                                        animate={{ width: 'auto', opacity: 1 }}
+                                        exit={{ width: 0, opacity: 0 }}
+                                        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                                        className="hidden md:flex w-80 lg:w-96 flex-shrink-0 border-l border-meet-elevated"
+                                    >
+                                        <Chat
+                                            messages={messages}
+                                            message={message}
+                                            setMessage={setMessage}
+                                            sendMessage={sendMessage}
+                                            onClose={handleToggleChat}
+                                            username={username}
+                                        />
+                                    </motion.div>
+
+                                    {/* Mobile full-screen chat */}
+                                    <motion.div
+                                        initial={{ y: '100%' }}
+                                        animate={{ y: 0 }}
+                                        exit={{ y: '100%' }}
+                                        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                                        className="md:hidden fixed inset-0 z-50 bg-meet-bg"
+                                    >
+                                        <Chat
+                                            messages={messages}
+                                            message={message}
+                                            setMessage={setMessage}
+                                            sendMessage={sendMessage}
+                                            onClose={handleToggleChat}
+                                            username={username}
+                                        />
+                                    </motion.div>
+                                </>
+                            )}
+                        </AnimatePresence>
                     </div>
 
+                    {/* Bottom controls area */}
+                    <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-3 md:px-6 py-3 md:py-4 z-30">
 
-                    {/* Controls Bar */}
-                    <div className="absolute bottom-0 left-0 right-0 bg-gray-800 bg-opacity-75 p-4 flex justify-center space-x-4">
-                        <button
-                            onClick={handleVideo}
-                            className="btn btn-circle btn-ghost text-white"
-                        >
-                            {video === true ? <VideoCameraIcon className="h-6 w-6" /> : <VideoCameraSlashIcon className="h-6 w-6" />}
-                        </button>
-                        <button
-                            onClick={handleEndCall}
-                            className="btn btn-circle btn-error text-white"
-                        >
-                            <PhoneXMarkIcon className="h-6 w-6" />
-                        </button>
-                        <button
-                            onClick={handleAudio}
-                            className="btn btn-circle btn-ghost text-white"
-                        >
-                            {audio === true
-                                ? <MicrophoneIcon className="h-6 w-6" />
-                                : <NoSymbolIcon className="h-6 w-6" />}   {/* mic muted */}
+                        {/* Left: time + meeting code */}
+                        <div className="hidden md:flex items-center gap-3 text-meet-text-secondary text-sm">
+                            <span>{currentTime}</span>
+                            <span className="text-meet-border">|</span>
+                            <span>{meetingCode}</span>
+                        </div>
 
+                        {/* Center: control buttons */}
+                        <div className="flex items-center gap-1 sm:gap-2 mx-auto md:mx-0">
 
-                        </button>
-
-                        {screenAvailable === true && (
+                            {/* Microphone */}
                             <button
-                                onClick={handleScreen}
-                                className="btn btn-circle btn-ghost text-white"
+                                onClick={handleAudio}
+                                className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-200 ${
+                                    audio
+                                        ? 'bg-meet-elevated hover:bg-meet-border text-white'
+                                        : 'bg-meet-danger hover:bg-meet-danger-hover text-white'
+                                }`}
+                                title={audio ? 'Mute microphone' : 'Unmute microphone'}
                             >
-                                {screen === true ? <StopCircleIcon className="h-6 w-6" /> : <ComputerDesktopIcon className="h-6 w-6" />}
+                                {audio
+                                    ? <MicrophoneIcon className="h-5 w-5 md:h-6 md:w-6" />
+                                    : <NoSymbolIcon className="h-5 w-5 md:h-6 md:w-6" />
+                                }
                             </button>
-                        )}
 
-                        <div className="indicator">
-                            {newMessages > 0 && (
-                                <span className="indicator-item badge badge-secondary">{newMessages}</span>
-                            )}
+                            {/* Camera */}
                             <button
-                                onClick={() => setModal(!showModal)}
-                                className="btn btn-circle btn-ghost text-white"
+                                onClick={handleVideo}
+                                className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-200 ${
+                                    video
+                                        ? 'bg-meet-elevated hover:bg-meet-border text-white'
+                                        : 'bg-meet-danger hover:bg-meet-danger-hover text-white'
+                                }`}
+                                title={video ? 'Turn off camera' : 'Turn on camera'}
                             >
-                                <ChatBubbleLeftRightIcon className="h-6 w-6" />
+                                {video
+                                    ? <VideoCameraIcon className="h-5 w-5 md:h-6 md:w-6" />
+                                    : <VideoCameraSlashIcon className="h-5 w-5 md:h-6 md:w-6" />
+                                }
+                            </button>
+
+                            {/* Screen share */}
+                            {screenAvailable && (
+                                <button
+                                    onClick={handleScreen}
+                                    className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-200 ${
+                                        screen
+                                            ? 'bg-meet-accent text-meet-bg'
+                                            : 'bg-meet-elevated hover:bg-meet-border text-white'
+                                    }`}
+                                    title={screen ? 'Stop presenting' : 'Present now'}
+                                >
+                                    {screen
+                                        ? <StopCircleIcon className="h-5 w-5 md:h-6 md:w-6" />
+                                        : <ComputerDesktopIcon className="h-5 w-5 md:h-6 md:w-6" />
+                                    }
+                                </button>
+                            )}
+
+                            {/* End call */}
+                            <button
+                                onClick={handleEndCall}
+                                className="h-10 md:h-12 px-4 md:px-5 rounded-full bg-meet-danger hover:bg-meet-danger-hover text-white flex items-center justify-center transition-all duration-200 ml-2"
+                                title="Leave call"
+                            >
+                                <PhoneXMarkIcon className="h-5 w-5 md:h-6 md:w-6" />
                             </button>
                         </div>
-                    </div>
 
-                    {/* Chat Sidebar */}
-                    <motion.div
-                        initial={{ x: '100%' }}
-                        animate={{ x: showModal ? '0%' : '100%' }}
-                        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                        className="absolute top-0 right-0 h-full bg-gray-800 w-80 shadow-lg z-50 flex flex-col"
-                    >
-                        <Chat
-                            messages={messages}
-                            message={message}
-                            setMessage={setMessage}
-                            sendMessage={sendMessage}
-                        />
-                    </motion.div>
-                </div>
+                        {/* Right: info, chat, participants */}
+                        <div className="hidden md:flex items-center gap-1">
+                            <button
+                                className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center hover:bg-meet-elevated text-meet-text-secondary transition-colors"
+                                title="Meeting details"
+                            >
+                                <InformationCircleIcon className="h-5 w-5 md:h-6 md:w-6" />
+                            </button>
+
+                            <button
+                                className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center hover:bg-meet-elevated text-meet-text-secondary transition-colors"
+                                title="People"
+                            >
+                                <UserGroupIcon className="h-5 w-5 md:h-6 md:w-6" />
+                            </button>
+
+                            {/* Chat toggle */}
+                            <div className="relative">
+                                <button
+                                    onClick={handleToggleChat}
+                                    className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-colors ${
+                                        showChat
+                                            ? 'bg-meet-accent text-meet-bg'
+                                            : 'hover:bg-meet-elevated text-meet-text-secondary'
+                                    }`}
+                                    title="Chat with everyone"
+                                >
+                                    <ChatBubbleLeftRightIcon className="h-5 w-5 md:h-6 md:w-6" />
+                                </button>
+                                {newMessages > 0 && !showChat && (
+                                    <span className="absolute -top-1 -right-1 bg-meet-accent text-meet-bg text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                                        {newMessages}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Mobile-only chat toggle (shown at end of center controls) */}
+                        <div className="md:hidden relative">
+                            <button
+                                onClick={handleToggleChat}
+                                className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+                                    showChat
+                                        ? 'bg-meet-accent text-meet-bg'
+                                        : 'bg-meet-elevated text-white'
+                                }`}
+                                title="Chat"
+                            >
+                                <ChatBubbleLeftRightIcon className="h-5 w-5" />
+                            </button>
+                            {newMessages > 0 && !showChat && (
+                                <span className="absolute -top-1 -right-1 bg-meet-accent text-meet-bg text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                                    {newMessages}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                </>
             )}
         </div>
     );

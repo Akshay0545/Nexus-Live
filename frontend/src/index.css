@@ -21,3 +21,30 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* src/index.css or a dedicated css file */
+.landing-page-bg {
+  background: #f7f3f1; /* Fallback color */
+  background-image: linear-gradient(to right, #fcecd5, #f8d5ba, #ff9839); /* Example gradient, adjust colors to match image */
+}
+
+/* Dark scrollbar for chat panel */
+.chat-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.chat-scrollbar::-webkit-scrollbar-track {
+  background: #202124;
+}
+.chat-scrollbar::-webkit-scrollbar-thumb {
+  background: #5f6368;
+  border-radius: 3px;
+}
+.chat-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #80868b;
+}
+
+/* Firefox scrollbar */
+.chat-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #5f6368 #202124;
+}
