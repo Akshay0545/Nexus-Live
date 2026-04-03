@@ -1,10 +1,20 @@
 import React from 'react'
 import "../App.css"
 import { Link, useNavigate } from 'react-router-dom'
+
+function randomMeetingCode() {
+    return Math.random().toString(36).substring(2, 8);
+}
+
 export default function LandingPage() {
 
 
     const router = useNavigate();
+
+    const handleJoinAsGuest = () => {
+        const code = randomMeetingCode();
+        router(`/${code}`);
+    };
 
     return (
         <div className='landingPageContainer'>
@@ -13,9 +23,7 @@ export default function LandingPage() {
                     <h2>LiveLink Meeting App</h2>
                 </div>
                 <div className='navlist'>
-                    <p onClick={() => {
-                        router("/aljk23")
-                    }}>Join as Guest</p>
+                    <p onClick={handleJoinAsGuest}>Join as Guest</p>
                     <p onClick={() => {
                         router("/auth")
 

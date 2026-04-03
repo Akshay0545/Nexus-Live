@@ -11,6 +11,7 @@ const Chat = ({ messages, message, setMessage, sendMessage, onClose, username })
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && message.trim()) {
+      e.preventDefault();
       sendMessage();
     }
   };
@@ -30,8 +31,8 @@ const Chat = ({ messages, message, setMessage, sendMessage, onClose, username })
         </button>
       </div>
 
-      {/* Messages area */}
-      <div className="flex-1 overflow-y-auto chat-scrollbar px-4 py-3 space-y-4 bg-ll-surface-alt">
+      {/* Messages area - min-h-0 so flex-1 doesn't block input below */}
+      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-4 bg-ll-surface-alt">
         {messages.length !== 0 ? (
           messages.map((item, index) => {
             const isSelf = item.sender === username;
@@ -63,14 +64,15 @@ const Chat = ({ messages, message, setMessage, sendMessage, onClose, username })
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input area */}
-      <div className="px-4 py-3 border-t border-ll-border bg-white">
-        <div className="flex items-center gap-2">
+      {/* Input area - flex-shrink-0 and z-10 so it stays visible and on top */}
+      <div className="flex-shrink-0 relative z-10 px-4 py-3 border-t border-ll-border bg-white">
+        <div className="flex items-center gap-2 min-w-0">
           <input
             type="text"
             placeholder="Send a message to everyone"
-            className="flex-1 bg-ll-surface-alt text-ll-text placeholder-ll-text-secondary rounded-full px-4 py-2.5 text-sm border border-ll-border outline-none focus:ring-2 focus:ring-ll-accent/30 focus:border-ll-accent transition-all"
-            value={message}
+            autoComplete="off"
+            className="flex-1 min-w-0 bg-ll-surface-alt text-ll-text placeholder-ll-text-secondary rounded-full px-4 py-2.5 text-sm border border-ll-border outline-none focus:ring-2 focus:ring-ll-accent/30 focus:border-ll-accent transition-all"
+            value={message ?? ''}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
           />

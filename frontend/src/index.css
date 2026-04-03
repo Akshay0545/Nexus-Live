@@ -23,27 +23,6 @@ code {
     monospace;
 }
 
-/* Scrollbar - warm light theme */
-.chat-scrollbar::-webkit-scrollbar {
-  width: 6px;
-}
-.chat-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-.chat-scrollbar::-webkit-scrollbar-thumb {
-  background: #d4c5b5;
-  border-radius: 3px;
-}
-.chat-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #b8a899;
-}
-
-/* Firefox scrollbar */
-.chat-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: #d4c5b5 transparent;
-}
-
 /* Landing page bg kept as-is */
 .landing-page-bg {
   background: #f7f3f1;
