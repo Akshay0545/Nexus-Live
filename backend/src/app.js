@@ -1,11 +1,10 @@
+import 'dotenv/config';
 import express from "express";
 import { createServer } from "node:http";
-import { Server } from "socket.io";
 import mongoose from "mongoose";
 import { connectToSocket } from "./controllers/socketManager.js";
 import cors from "cors";
 import authRoutes from "./routes/auth.routes.js";
-import 'dotenv/config';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 
 const app = express();
@@ -14,7 +13,8 @@ const io = connectToSocket(server);
 
 
 app.set("port", (process.env.PORT || 8000))
-app.use(cors());
+const corsOrigin = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
+app.use(cors({ origin: corsOrigin, credentials: true }));
 app.use(express.json({ limit: "40kb" }));
 app.use(express.urlencoded({ limit: "40kb", extended: true }));
 

@@ -1,7 +1,11 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/user.model.js';
-import {Meeting} from '../models/meeting.model.js';
-const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
+import { Meeting } from '../models/meeting.model.js';
+
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET || JWT_SECRET.trim() === '') {
+  throw new Error('JWT_SECRET environment variable is required');
+}
 
 const sendError = (res, statusCode, message) => res.status(statusCode).json({ error: message });
 
@@ -81,11 +85,8 @@ export const addToHistory = async (req, res) => {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    const exists = user.history.some(h => h.meetingCode === meetingCode);
-    if (!exists) {
-      user.history.push({ meetingCode });
-      await user.save();
-    }
+    user.history.push({ meetingCode });
+    await user.save();
 
     res.json({ success: true, message: "Added to history successfully" });
   } catch (err) {

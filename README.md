@@ -99,6 +99,16 @@ REACT_APP_API_BASE_URL=http://localhost:8000/api
    - Register a new account or login with existing credentials
    - Create or join video meetings
 
+### Troubleshooting: "ERR_CONNECTION_REFUSED" or signup not working
+
+- **Start the backend first.** The frontend calls `http://localhost:8000` for the API. If you see `net::ERR_CONNECTION_REFUSED`, the backend is not running. In a terminal run:
+  ```bash
+  cd backend
+  npm run dev
+  ```
+- **Set JWT_SECRET.** The backend will not start without `JWT_SECRET` in `backend/.env`. Copy `backend/example.env` to `backend/.env` and set `JWT_SECRET` to any long random string.
+- **MongoDB.** In development, if MongoDB is not installed, the backend will try to use an in-memory database (ensure you have run `npm install` in the backend so dev dependencies are installed).
+
 ## API Endpoints
 
 ### Authentication
