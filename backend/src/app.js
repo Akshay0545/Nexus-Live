@@ -5,7 +5,6 @@ import mongoose from "mongoose";
 import { connectToSocket } from "./controllers/socketManager.js";
 import cors from "cors";
 import authRoutes from "./routes/auth.routes.js";
-import { MongoMemoryServer } from 'mongodb-memory-server';
 
 const app = express();
 const server = createServer(app);
@@ -33,6 +32,7 @@ const start = async () => {
     } catch (err) {
         if (!isProd) {
             console.warn(`Local MongoDB not available at mongodb://127.0.0.1:27017/livelink_dev. Starting in-memory MongoDB...`);
+            const { MongoMemoryServer } = await import('mongodb-memory-server');
             const mongod = await MongoMemoryServer.create();
             const memUri = mongod.getUri();
             const connectionDb = await mongoose.connect(memUri);
