@@ -1,9 +1,8 @@
 {
   "buildCommand": "npm run build",
-  "outputDirectory": "frontend/build",
+  "outputDirectory": "build",
   "installCommand": "npm install",
   "framework": "create-react-app",
-  "rootDirectory": "frontend",
   "env": {
     "CI": "false",
     "DISABLE_ESLINT_PLUGIN": "true"
