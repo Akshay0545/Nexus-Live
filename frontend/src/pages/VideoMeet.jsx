@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import io from "socket.io-client";
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -109,12 +109,7 @@ export default function VideoMeetComponent() {
         };
     }, []);
 
-    useEffect(() => {
-        getPermissions();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    const getPermissions = async () => {
+    const getPermissions = useCallback(async () => {
         try {
             const videoPermission = await navigator.mediaDevices.getUserMedia({ video: true });
             if (videoPermission) {
@@ -149,22 +144,13 @@ export default function VideoMeetComponent() {
         } catch (error) {
             console.log(error);
         }
-    };
+    }, [videoAvailable, audioAvailable]);
 
     useEffect(() => {
-        if (video !== undefined && audio !== undefined) {
-            getUserMedia();
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [video, audio])
+        getPermissions();
+    }, [getPermissions]);
 
-    let getMedia = () => {
-        setVideo(videoAvailable);
-        setAudio(audioAvailable);
-        connectToSocketServer();
-    }
-
-    let getUserMediaSuccess = (stream) => {
+    const getUserMediaSuccess = useCallback((stream) => {
         try {
             window.localStream.getTracks().forEach(track => track.stop())
         } catch (e) { console.log(e) }
@@ -210,9 +196,9 @@ export default function VideoMeetComponent() {
                 })
             }
         })
-    }
+    }, [])
 
-    let getUserMedia = () => {
+    const getUserMedia = useCallback(() => {
         if ((video && videoAvailable) || (audio && audioAvailable)) {
             navigator.mediaDevices.getUserMedia({ video: video, audio: audio })
                 .then(getUserMediaSuccess)
@@ -224,6 +210,18 @@ export default function VideoMeetComponent() {
                 tracks.forEach(track => track.stop())
             } catch (e) { }
         }
+    }, [video, audio, videoAvailable, audioAvailable, getUserMediaSuccess])
+
+    useEffect(() => {
+        if (video !== undefined && audio !== undefined) {
+            getUserMedia();
+        }
+    }, [video, audio, getUserMedia])
+
+    let getMedia = () => {
+        setVideo(videoAvailable);
+        setAudio(audioAvailable);
+        connectToSocketServer();
     }
 
     let getDislayMediaSuccess = (stream) => {
