@@ -111,18 +111,8 @@ export default function VideoMeetComponent() {
 
     useEffect(() => {
         getPermissions();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-
-    let getDislayMedia = () => {
-        if (screen) {
-            if (navigator.mediaDevices.getDisplayMedia) {
-                navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
-                    .then(getDislayMediaSuccess)
-                    .then((stream) => { })
-                    .catch((e) => console.log(e))
-            }
-        }
-    }
 
     const getPermissions = async () => {
         try {
@@ -165,6 +155,7 @@ export default function VideoMeetComponent() {
         if (video !== undefined && audio !== undefined) {
             getUserMedia();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [video, audio])
 
     let getMedia = () => {
